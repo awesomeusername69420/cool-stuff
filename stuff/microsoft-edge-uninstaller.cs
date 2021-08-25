@@ -1,4 +1,8 @@
-﻿using Microsoft.Win32;
+/*
+*   Finds information about Edge via registry and uninstalls it
+*/
+
+using Microsoft.Win32;
 using System;
 using System.Diagnostics;
 using System.IO;

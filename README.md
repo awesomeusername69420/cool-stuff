@@ -6,3 +6,4 @@ Things in here:
 - Malwarebytes Uninstaller
 - Lightspeed Smart Agent Uninstaller
 - Microsoft Edge Uninstaller
+- UnRussian

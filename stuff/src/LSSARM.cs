@@ -61,8 +61,7 @@ namespace LSSARM
 
                 Process wmic = Process.Start(psi);
 
-                Console.WriteLine("Trying to start windows installer...");
-                Console.WriteLine("Computer will automatically reboot upon success.");
+                Console.WriteLine("Trying to start windows installer...\nComputer will automatically reboot upon success.\nThis may take a while.");
 
                 Thread.Sleep(300);
 
@@ -96,7 +95,7 @@ namespace LSSARM
 
                 if (killed)
                 {
-                    pausekill("Uninstall fucceeded. Computer should reboot soon");
+                    pausekill("Uninstall succeeded. Computer should reboot soon.");
                 } else
                 {
                     pausekill("Uninstall failed. :(");

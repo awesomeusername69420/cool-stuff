@@ -2,16 +2,64 @@
 *   Bypasses the Lightspeed Smart Agent uninstaller's password requirement
 */
 
+using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Security.Principal;
-using System.Threading;
 
 namespace LSSARM
 {
     class Program
     {
+        private static List<string> keys = new List<string>() // Registry keys with program information according to Microsoft's guidelines
+        {
+            "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
+        };
+
+        private static void getPrograms(RegistryKey rk, List<string> o)
+        {
+            foreach (string k in keys)
+            {
+                using (RegistryKey ork = rk.OpenSubKey(k))
+                {
+                    if (ork == null) // Sad
+                    {
+                        continue;
+                    }
+
+                    foreach (string name in ork.GetSubKeyNames())
+                    {
+                        using (RegistryKey osk = ork.OpenSubKey(name))
+                        {
+                            try
+                            {
+                                string cname = (string)osk.GetValue("DisplayName");
+
+                                if (string.IsNullOrWhiteSpace(cname)) // Retarded programs
+                                {
+                                    continue;
+                                }
+
+                                string us = (string)osk.GetValue("UninstallString");
+
+                                if (string.IsNullOrWhiteSpace(us))
+                                {
+                                    continue;
+                                }
+
+                                o.Add(cname);
+                                o.Add(us);
+                            }
+                            catch (Exception) { }
+                        }
+                    }
+                }
+            }
+        }
+
         private static bool isadmin()
         {
             WindowsIdentity usr = null;
@@ -23,134 +71,142 @@ namespace LSSARM
 
                 bool r = p.IsInRole(WindowsBuiltInRole.Administrator); // Test if user is an admin
 
-                usr.Dispose(); // Dispose of the user because memory
+                usr.Dispose();
 
                 return r;
             }
             catch (Exception)
             {
-                usr.Dispose(); // If getting information about the user failed, pretend they're not admin
+                usr.Dispose(); // If getting information about the user failed or something broke, pretend they're not admin
+
                 return false;
             }
         }
 
         private static void pausekill(string s)
         {
-            Console.WriteLine(s + ". Press any key to exit.");
+            Console.WriteLine(s + " Press any key to exit.");
             Console.ReadKey();
 
             Environment.Exit(-1);
         }
 
-        private static bool ask(string q)
-        {
-            Console.WriteLine(q + " (Y/N)");
-            string s = Console.ReadLine();
-
-            return s.ToLower() == "y";
-        }
-
         private static void uninstall()
         {
+            Console.WriteLine("Beginning uninstall process...");
+
+            List<string> found = new List<string>();
+
             try
             {
-                ProcessStartInfo psi = new ProcessStartInfo();
-                psi.FileName = "C:\\Windows\\System32\\cmd.exe";
-                psi.Arguments = "/C wmic.exe product where \"name like 'Lightspeed Smart Agent'\" call uninstall"; // Makes wmic try to uninstall
-                psi.WindowStyle = ProcessWindowStyle.Hidden;
+                Console.WriteLine("Gathering programs...");
 
-                Process wmic = Process.Start(psi);
-
-                Console.WriteLine("Trying to start windows installer...\nComputer will automatically reboot upon success.\nThis may take a while.");
-
-                Thread.Sleep(300);
-
-                bool found = false;
+                bool lsfound = false;
                 bool killed = false;
 
-                while (!found)
+                getPrograms(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64), found); // Get programs
+                getPrograms(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64), found);
+
+                Console.WriteLine("Searching for Lightspeed...");
+
+                for (int i = 0; i < found.Count; i++)
                 {
-                    foreach (Process p in Process.GetProcesses())
+                    if (killed)
                     {
-                        string title = p.MainWindowTitle.ToLower();
-
-                        if (title.Contains("lightspeed smart agent setup") && p.ProcessName.ToLower() == "msiexec")
-                        {
-                            try
-                            {
-                                p.Kill();
-
-                                killed = true;
-                            }
-                            catch (Exception) { }
-
-                            found = true;
-
-                            break;
-                        }
+                        break; // Stupid
                     }
 
-                    Thread.Sleep(40);
+                    string s = found[i].ToLower();
+
+                    if (s.Contains("msiexec")) // Uninstall string!
+                    {
+                        continue;
+                    }
+
+                    if (s.ToLower().Contains("lightspeed")) // Lightspeed has been found!
+                    {
+                        Console.WriteLine("Lightspeed found, attempting uninstall...");
+
+                        ProcessStartInfo psi = new ProcessStartInfo();
+                        psi.FileName = "cmd.exe";
+                        psi.Arguments = "/C " + found[i + 1];
+                        psi.WindowStyle = ProcessWindowStyle.Hidden;
+                        psi.UseShellExecute = true;
+                        psi.Verb = "runas";
+
+                        Process.Start(psi);
+
+                        lsfound = true;
+                        bool looping = true; // Used to break out of nested loop
+
+                        while (looping)
+                        {
+                            foreach (Process p in Process.GetProcessesByName("msiexec"))
+                            {
+                                string title = p.MainWindowTitle.ToLower();
+
+                                if (title.Contains("lightspeed smart agent setup"))
+                                {
+                                    p.Kill();
+
+                                    killed = true;
+                                    looping = false;
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
-                if (killed)
+                if (lsfound)
                 {
-                    pausekill("Uninstall succeeded. Computer should reboot soon.");
+                    if (killed)
+                    {
+                        pausekill("Uninstall succeeded. Computer should reboot soon."); // :D
+                    }
+                    else
+                    {
+                        pausekill("Uninstall failed. :("); // D:
+                    }
                 } else
                 {
-                    pausekill("Uninstall failed. :(");
+                    pausekill("Lightspeed not found."); // D:!!!
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                pausekill("Critical Error. Stopping uninstall");
+                pausekill("Critical Error. Aborting uninstall.\nError: " + ex.ToString());
             }
         }
 
         static void Main(string[] args)
         {
             Console.Clear();
-            Console.ResetColor(); // Prep the console
+            Console.ResetColor();
 
             if (isadmin())
             {
-                if (Process.GetProcessesByName("wmic").Length > 0) // Avoid problems with Windows (fuck msiexec check)
-                {
-                    if (ask("Another uninstall process is active. Continue?"))
-                    {
-                        uninstall();
-                    } else
-                    {
-                        pausekill("Cancelled by user");
-                    }
-                } else
-                {
-                    uninstall();
-                }
-            } else
+                uninstall(); // Let the fun begin
+            }
+            else
             {
-                if (ask("Admin is required. Would you like to run as admin?"))
+                try
                 {
-                    try
-                    {
-                        ProcessStartInfo psi = new ProcessStartInfo(); // Creates a thing that can become a process
-                        psi.FileName = Assembly.GetExecutingAssembly().Location; // Set process location to location of the current process
-                        psi.UseShellExecute = true; // This is retarded (but needed)
-                        psi.Verb = "runas"; // I don't get how this works but this makes it run as admin
+                    ProcessStartInfo psi = new ProcessStartInfo(); // Restarts the process as admin
+                    psi.FileName = Assembly.GetExecutingAssembly().Location;
+                    psi.UseShellExecute = true;
+                    psi.Verb = "runas";
 
-                        Process p = Process.Start(psi); // Start the thing so it becomes a process
+                    Process p = Process.Start(psi);
 
-                        p.Dispose(); // Memory
+                    p.Dispose();
 
-                        Environment.Exit(1337); // Close current process if creating a new admin process succeeded (user click yes on uac)
-                    }
-                    catch (Exception)
-                    {
-                        pausekill("Failed to get Admin");
-                    }
-                } else
+                    Environment.Exit(1337);
+                }
+                catch (Exception)
                 {
-                    pausekill("Admin is required");
+                    pausekill("Failed to get Admin.");
                 }
             }
         }

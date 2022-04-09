@@ -41,7 +41,7 @@ namespace kaboom
                     cur = 0;
                 }
 
-                Thread.Sleep(1500); // Wait 40 ms to prevent a crash while letting the system know the process is still alive
+                Thread.Sleep(1500); // Wait 1.5 seconds before cycling to next title
             }
         }
     }

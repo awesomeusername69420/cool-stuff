@@ -11,6 +11,13 @@ namespace EdgeSucks
 {
     class Program
     {
+        static void Explode(string reason, int code=-1)
+        {
+            Console.WriteLine(reason);
+            Console.ReadKey();
+            Environment.Exit(code);
+        }
+
         static void Main(string[] args)
         {
             string registry_key = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall"; // Location of installed programs that followed Microsoft's guidelines
@@ -25,11 +32,9 @@ namespace EdgeSucks
             }
             catch (Exception) { }
 
-            if (key == null)
+            if (key == null) // This shouldn't happen but just in case
             {
-                Console.WriteLine("Failed to open registry key."); // This shouldn't happen but just in case
-                Console.ReadKey();
-                Environment.Exit(-1);
+                Explode("Failed to open registry key.");
             }
 
             try
@@ -81,25 +86,19 @@ namespace EdgeSucks
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) // If something goes horribly wrong, catch it
             {
-                Console.WriteLine("Failed to enumerate over subkeys. Error:" + Environment.NewLine + ex.ToString()); // If something goes horribly wrong, catch it
-                Console.ReadKey();
-                Environment.Exit(-2);
+                Explode("Failed to enumerate over subkeys. Error:" + Environment.NewLine + ex.ToString(), -2);
             }
 
-            if (string.IsNullOrEmpty(edge_version))
+            if (string.IsNullOrEmpty(edge_version)) // :(
             {
-                Console.WriteLine("Failed to find Edge version."); // :(
-                Console.ReadKey();
-                Environment.Exit(-3);
+                Explode("Failed to find Edge version.", -3);
             }
 
-            if (string.IsNullOrEmpty(edge_location))
+            if (string.IsNullOrEmpty(edge_location)) // :(
             {
-                Console.WriteLine("Failed to find Edge location."); // :(
-                Console.ReadKey();
-                Environment.Exit(-4);
+                Explode("Failed to find Edge location.", -4);
             }
 
             string fullpath = edge_location + "\\" + edge_version + "\\Installer\\setup.exe";
@@ -119,15 +118,11 @@ namespace EdgeSucks
 
                     p.WaitForExit();
 
-                    Console.WriteLine("Uninstall succeeded. Press any key to exit."); // :D
-                    Console.ReadKey();
-                    Environment.Exit(0);
+                    Explode("Uninstall succeeded. Press any key to exit.", 0); // :D
                 }
-                catch (Exception ex)
+                catch (Exception ex) // :(
                 {
-                    Console.WriteLine("Uninstall failed. Error:" + Environment.NewLine + ex.ToString()); // :(
-                    Console.ReadKey();
-                    Environment.Exit(-5);
+                    Explode("Uninstall failed. Error:" + Environment.NewLine + ex.ToString(), -5);
                 }
             }
         }

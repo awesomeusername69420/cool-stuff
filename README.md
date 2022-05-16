@@ -7,3 +7,4 @@ Things in here:
 - Lightspeed Smart Agent Uninstaller
 - Microsoft Edge Uninstaller
 - UnRussian
+- Krypt

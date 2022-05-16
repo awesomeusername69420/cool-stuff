@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 using Krypt.Algorithms;
+using Krypt.Tools;
 
 namespace Krypt
 {
@@ -30,6 +31,8 @@ namespace Krypt
         private RandomAlphabetic ra = new RandomAlphabetic();
         private Affine af = new Affine();
         private Multiplicative mp = new Multiplicative();
+
+        private FrequencyAnalysis frq = new FrequencyAnalysis();
 
         public static bool ADFGVX_Status = false;
 
@@ -259,6 +262,21 @@ namespace Krypt
 
             mp.PassParameters(new List<string>() { Multiplicative_Input.Text, key });
             Log("Multplicative (" + key + "):", mp.Decrypt());
+        }
+
+        private void stripexit_Click(object sender, EventArgs e)
+        {
+            Environment.Exit(0);
+        }
+
+        private void stripfrequency_Click(object sender, EventArgs e)
+        {
+            if (!frq.Visible)
+            {
+                frq.Show();
+
+                frq.Visible = true;
+            }
         }
     }
 }

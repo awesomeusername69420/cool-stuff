@@ -8,8 +8,8 @@ namespace Krypt.Algorithms
 
         public override string Encrypt()
         {
-            int shift = base.GetIntParameter(PARAMETERS, 1);
             string plaintext = base.CleanString(base.GetStringParameter(this.PARAMETERS, 0)).ToUpper();
+            int shift = base.GetIntParameter(PARAMETERS, 1);
 
             string ciphertext = string.Empty;
 

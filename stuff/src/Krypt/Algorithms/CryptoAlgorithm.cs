@@ -8,7 +8,6 @@ namespace Krypt
     {
         public List<string> ALPHABET = new List<string>() { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
         public Regex REGEX_ALPHANUMERIC = new Regex(@"[^a-zA-Z0-9]", RegexOptions.None);
-        public Regex REGEX_NUMERIC = new Regex(@"[^a-zA-Z0-9]", RegexOptions.None);
 
         public string SortString(string s) // Sorts the characters of a string in abc order
         {

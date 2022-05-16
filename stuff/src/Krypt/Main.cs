@@ -28,6 +28,8 @@ namespace Krypt
         private ADFGVX ad = new ADFGVX();
         private Book bk = new Book();
         private RandomAlphabetic ra = new RandomAlphabetic();
+        private Affine af = new Affine();
+        private Multiplicative mp = new Multiplicative();
 
         public static bool ADFGVX_Status = false;
 
@@ -40,9 +42,8 @@ namespace Krypt
         {
             AllocConsole();
 
-            // Majik?
-
-            ADFGVX_Status = ADFGVX_ExportXLSX.Checked;
+            ADFGVX_Status = ADFGVX_ExportXLSX.Checked; // Majik?
+            Multiplicative_Key.Maximum = cs.ALPHABET.Count - 1;
         }
 
         // Also dumb
@@ -228,6 +229,36 @@ namespace Krypt
 
             ra.PassParameters(new List<string>() { RandomAlphabet_Input.Text.Trim(), keyword });
             Log("Random Alphabetic (" + keyword + "):", ra.Decrypt());
+        }
+
+        private void Affine_Encrypt_Click(object sender, EventArgs e)
+        {
+            string mkey = Affine_MultiplicitiveKey.Value.ToString();
+            string akey = Affine_AdditiveKey.Value.ToString();
+
+            af.PassParameters(new List<string>() { Affine_Input.Text.Trim(), mkey, akey });
+            Log("Affine (" + mkey + ", " + akey + "):", af.Encrypt());
+        }
+
+        private void Affine_Decrypt_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This does not exist yet", "Whoops", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        private void Multiplicative_Encrypt_Click(object sender, EventArgs e)
+        {
+            string key = Multiplicative_Key.Value.ToString();
+
+            mp.PassParameters(new List<string>() { Multiplicative_Input.Text, key });
+            Log("Multplicative (" + key + "):", mp.Encrypt());
+        }
+
+        private void Multiplicative_Decrypt_Click(object sender, EventArgs e)
+        {
+            string key = Multiplicative_Key.Value.ToString();
+
+            mp.PassParameters(new List<string>() { Multiplicative_Input.Text, key });
+            Log("Multplicative (" + key + "):", mp.Decrypt());
         }
     }
 }

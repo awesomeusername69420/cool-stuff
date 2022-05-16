@@ -173,7 +173,7 @@ namespace Krypt.Algorithms
                 this.PARAMETERS.Add(s);
             }
 
-            GenerateWordBox();
+            this.GenerateWordBox();
         }
     }
 }

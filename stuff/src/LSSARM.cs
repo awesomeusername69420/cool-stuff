@@ -7,28 +7,66 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Text;
+
+using HWND = System.IntPtr;
 
 namespace LSSARM
 {
     class Program
     {
-        private static List<string> keys = new List<string>() // Registry keys with program information according to Microsoft's guidelines
-        {
-            "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
-            "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
-        };
+        private delegate bool EnumWindowsProc(HWND hWND, int lParam);
 
-        private static void getPrograms(RegistryKey rk, List<string> o)
+        [DllImport("user32.DLL")]
+        private static extern bool EnumWindows(EnumWindowsProc enumFunc, int lParam);
+
+        [DllImport("user32.DLL")]
+        private static extern int GetWindowText(HWND hWND, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("user32.DLL")]
+        private static extern int GetWindowTextLength(HWND hWND);
+
+        [DllImport("user32.DLL")]
+        private static extern bool IsWindowVisible(HWND hWND);
+
+        [DllImport("user32.DLL")]
+        private static extern IntPtr GetShellWindow();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        private static IDictionary<HWND, string> GetOpenWindows()
+        {
+            HWND shellWindow = GetShellWindow();
+            Dictionary<HWND, string> windows = new Dictionary<HWND, string>();
+
+            EnumWindows(delegate (HWND hWND, int lParam)
+            {
+                if (hWND == shellWindow) return true;
+                if (!IsWindowVisible(hWND)) return true;
+
+                int length = GetWindowTextLength(hWND);
+                if (length == 0) return true;
+
+                StringBuilder builder = new StringBuilder(length);
+                GetWindowText(hWND, builder, length + 1);
+
+                windows[hWND] = builder.ToString();
+                return true;
+            }, 0);
+
+            return windows;
+        }
+
+        private static void GetPrograms(RegistryKey rk, List<string> o, List<string> keys)
         {
             foreach (string k in keys)
             {
                 using (RegistryKey ork = rk.OpenSubKey(k))
                 {
-                    if (ork == null) // Sad
-                    {
-                        continue;
-                    }
+                    if (ork == null) continue; // Sad
 
                     foreach (string name in ork.GetSubKeyNames())
                     {
@@ -38,17 +76,11 @@ namespace LSSARM
                             {
                                 string cname = (string)osk.GetValue("DisplayName");
 
-                                if (string.IsNullOrWhiteSpace(cname)) // Retarded programs
-                                {
-                                    continue;
-                                }
+                                if (string.IsNullOrWhiteSpace(cname)) continue; // Retarded programs
 
                                 string us = (string)osk.GetValue("UninstallString");
 
-                                if (string.IsNullOrWhiteSpace(us))
-                                {
-                                    continue;
-                                }
+                                if (string.IsNullOrWhiteSpace(us)) continue;
 
                                 o.Add(cname);
                                 o.Add(us);
@@ -60,7 +92,7 @@ namespace LSSARM
             }
         }
 
-        private static bool isadmin()
+        private static bool IsAdmin()
         {
             WindowsIdentity usr = null;
 
@@ -74,16 +106,16 @@ namespace LSSARM
                 usr.Dispose();
 
                 return r;
-            }
-            catch (Exception)
+            } 
+            catch (Exception) // If getting information about the user failed or something broke, pretend they're not admin
             {
-                usr.Dispose(); // If getting information about the user failed or something broke, pretend they're not admin
+                usr.Dispose();
 
                 return false;
             }
         }
 
-        private static void pausekill(string s)
+        private static void PauseKill(string s)
         {
             Console.WriteLine(s + " Press any key to exit.");
             Console.ReadKey();
@@ -91,10 +123,8 @@ namespace LSSARM
             Environment.Exit(-1);
         }
 
-        private static void uninstall()
+        private static void Uninstall()
         {
-            Console.WriteLine("Beginning uninstall process...");
-
             List<string> found = new List<string>();
 
             try
@@ -104,32 +134,32 @@ namespace LSSARM
                 bool lsfound = false;
                 bool killed = false;
 
-                getPrograms(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64), found); // Get programs
-                getPrograms(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64), found);
+                List<string> keys = new List<string>() // Registry keys with program information according to Microsoft's guidelines
+                {
+                    "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+                    "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
+                };
 
-                Console.WriteLine("Searching for Lightspeed...");
+                GetPrograms(RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64), found, keys); // Get programs
+                GetPrograms(RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64), found, keys); // Lightspeed isn't usually in CurrentUser but check just in case
+
+                Console.WriteLine("Searching for Lightspeed in the registry...");
 
                 for (int i = 0; i < found.Count; i++)
                 {
-                    if (killed)
-                    {
-                        break; // Stupid
-                    }
+                    if (killed) break; // Stupid
 
-                    string s = found[i].ToLower();
+                    string s = found[i];
 
-                    if (s.Contains("msiexec")) // Uninstall string!
-                    {
-                        continue;
-                    }
+                    if (s.ToLower().Contains("msiexec")) continue; // Skip checking uninstall strings
 
-                    if (s.ToLower().Contains("lightspeed")) // Lightspeed has been found!
+                    if (s.Equals("Lightspeed Smart Agent")) // Lightspeed has been found!
                     {
                         Console.WriteLine("Lightspeed found, attempting uninstall...");
 
                         ProcessStartInfo psi = new ProcessStartInfo();
                         psi.FileName = "cmd.exe";
-                        psi.Arguments = "/C " + found[i + 1];
+                        psi.Arguments = "/C " + found[i + 1] + " /q"; // '/q' removes the popup Yes/No dialog
                         psi.WindowStyle = ProcessWindowStyle.Hidden;
                         psi.UseShellExecute = true;
                         psi.Verb = "runas";
@@ -137,20 +167,30 @@ namespace LSSARM
                         Process.Start(psi);
 
                         lsfound = true;
-                        bool looping = true; // Used to break out of nested loop
+                        bool search = true; // Used to break out of nested loop
 
-                        while (looping)
+                        while (search)
                         {
-                            foreach (Process p in Process.GetProcessesByName("msiexec"))
+                            foreach (KeyValuePair<IntPtr, string> window in GetOpenWindows())
                             {
-                                string title = p.MainWindowTitle.ToLower();
-
-                                if (title.Contains("lightspeed smart agent setup"))
+                                if (window.Value.Equals("Lightspeed Smart Agent Setup"))
                                 {
-                                    p.Kill();
-
-                                    killed = true;
-                                    looping = false;
+                                    search = false;
+                                    
+                                    uint pid;
+                                    GetWindowThreadProcessId(window.Key, out pid);
+                                    
+                                    Process p = Process.GetProcessById((int)pid);
+ 
+                                    if (p != null)
+                                    {
+                                        try
+                                        {
+                                            p.Kill();
+                                            killed = true;
+                                        }
+                                        catch (Exception) { }
+                                    }
 
                                     break;
                                 }
@@ -162,21 +202,18 @@ namespace LSSARM
                 if (lsfound)
                 {
                     if (killed)
-                    {
-                        pausekill("Uninstall succeeded. Computer should reboot soon."); // :D
-                    }
+                        PauseKill("Uninstall succeeded. Computer should reboot soon."); // :D
                     else
-                    {
-                        pausekill("Uninstall failed. :("); // D:
-                    }
-                } else
+                        PauseKill("Uninstall failed. :("); // D:
+                }
+                else
                 {
-                    pausekill("Lightspeed not found."); // D:!!!
+                    PauseKill("Lightspeed not found."); // D:!!!
                 }
             }
             catch (Exception ex)
             {
-                pausekill("Critical Error. Aborting uninstall.\nError: " + ex.ToString());
+                PauseKill("Critical Error. Aborting uninstall.\nError: " + ex.ToString()); // wtflip
             }
         }
 
@@ -185,9 +222,9 @@ namespace LSSARM
             Console.Clear();
             Console.ResetColor();
 
-            if (isadmin())
+            if (IsAdmin())
             {
-                uninstall(); // Let the fun begin
+                Uninstall(); // Let the fun begin
             }
             else
             {
@@ -206,7 +243,7 @@ namespace LSSARM
                 }
                 catch (Exception)
                 {
-                    pausekill("Failed to get Admin.");
+                    PauseKill("Failed to get Admin.");
                 }
             }
         }

@@ -11,25 +11,23 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 
-using HWND = System.IntPtr;
-
 namespace LSSARM
 {
     class Program
     {
-        private delegate bool EnumWindowsProc(HWND hWND, int lParam);
+        private delegate bool EnumWindowsProc(IntPtr hWND, int lParam);
 
         [DllImport("user32.DLL")]
         private static extern bool EnumWindows(EnumWindowsProc enumFunc, int lParam);
 
         [DllImport("user32.DLL")]
-        private static extern int GetWindowText(HWND hWND, StringBuilder lpString, int nMaxCount);
+        private static extern int GetWindowText(IntPtr hWND, StringBuilder lpString, int nMaxCount);
 
         [DllImport("user32.DLL")]
-        private static extern int GetWindowTextLength(HWND hWND);
+        private static extern int GetWindowTextLength(IntPtr hWND);
 
         [DllImport("user32.DLL")]
-        private static extern bool IsWindowVisible(HWND hWND);
+        private static extern bool IsWindowVisible(IntPtr hWND);
 
         [DllImport("user32.DLL")]
         private static extern IntPtr GetShellWindow();
@@ -37,12 +35,12 @@ namespace LSSARM
         [DllImport("user32.dll", SetLastError = true)]
         static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
-        private static IDictionary<HWND, string> GetOpenWindows()
+        private static IDictionary<IntPtr, string> GetOpenWindows()
         {
-            HWND shellWindow = GetShellWindow();
-            Dictionary<HWND, string> windows = new Dictionary<HWND, string>();
+            IntPtr shellWindow = GetShellWindow();
+            Dictionary<IntPtr, string> windows = new Dictionary<IntPtr, string>();
 
-            EnumWindows(delegate (HWND hWND, int lParam)
+            EnumWindows(delegate (IntPtr hWND, int lParam)
             {
                 if (hWND == shellWindow) return true;
                 if (!IsWindowVisible(hWND)) return true;

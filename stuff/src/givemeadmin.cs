@@ -1,4 +1,4 @@
-﻿/*
+/*
 *   Asks for admin until it gets admin
 */
 
@@ -7,63 +7,54 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Security.Principal;
 
-namespace ConsoleApp1
+namespace givemeadmin
 {
     class Program
     {
-        private static bool isadmin()
+        private static bool IsAdmin()
         {
-            WindowsIdentity usr = null;
-
             try
             {
-                usr = WindowsIdentity.GetCurrent(); // Get the current user
-                WindowsPrincipal p = new WindowsPrincipal(usr);
-
-                bool r = p.IsInRole(WindowsBuiltInRole.Administrator); // Test if user is an admin
-
-                usr.Dispose(); // Dispose of the user because memory
-
-                return r;
+                using (WindowsIdentity user = WindowsIdentity.GetCurrent())
+                {
+                    return new WindowsPrincipal(user).IsInRole(WindowsBuiltInRole.Administrator);
+                }
             }
-            catch (Exception)
-            {
-                usr.Dispose(); // If getting information about the user failed, pretend they're not admin
-                return false;
-            }
+            catch (Exception) { }
+
+            return false;
         }
 
-        private static void getadmin()
+        private static void UAC()
         {
             try
             {
-                ProcessStartInfo psi = new ProcessStartInfo(); // Creates a thing that can become a process
-                psi.FileName = Assembly.GetExecutingAssembly().Location; // Set process location to location of the current process
-                psi.UseShellExecute = true; // This is retarded (but needed)
-                psi.Verb = "runas"; // I don't get how this works but this makes it run as admin
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.FileName = Assembly.GetExecutingAssembly().Location;
+                psi.UseShellExecute = true;
+                psi.Verb = "runas";
 
-                Process p = Process.Start(psi); // Start the thing so it becomes a process
+                Process.Start(psi);
 
-                p.Dispose(); // Memory
-
-                Environment.Exit(1337); // Close current process if creating a new admin process succeeded (user click yes on uac)
+                Environment.Exit(1337);
             }
             catch (Exception)
             {
-                getadmin(); // They clicked no or something went wrong? Try again!
+                UAC();
             }
         }
 
         static void Main(string[] args)
         {
-            if (!isadmin())
+            if (!IsAdmin())
             {
                 try
                 {
-                    getadmin();
+                    UAC();
                 }
                 catch (Exception) { }
-            } else
+            }
+            else
             {
                 Console.WriteLine("Admin!"); // Yay!! Admin!!!!
                 Console.ReadKey();

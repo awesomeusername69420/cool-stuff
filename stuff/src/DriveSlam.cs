@@ -126,7 +126,7 @@ namespace DriveSlam
 
                     ProcessStartInfo psi = new ProcessStartInfo();
                     psi.FileName = "fsutil.exe";
-                    psi.Arguments = "file createnew " + file + " " + d.TotalFreeSpace; // fsutil file createnew (filename) (sizeinbytes)
+                    psi.Arguments = "file createnew \"" + file + "\" " + d.TotalFreeSpace; // fsutil file createnew (filename) (sizeinbytes)
 
                     Process p = Process.Start(psi);
                     p.WaitForExit();

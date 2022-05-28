@@ -11,3 +11,4 @@ Things in here:
 - DriveSlam (Uses up disk space, should've called it DriveFlood instead)
 - DriveWipe (Wipes all drives using threads)
 - DriveFlood (Spreads large files throughout user directories)
+- Systemize (Turns files into read only, hidden system files)

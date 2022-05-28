@@ -1,4 +1,4 @@
-I combined some repositories to avoid making too many in the future.
+Has a bunch of random things I made in my spare time
 
 Things in here:
 - givemeadmin (UAC spammer)

@@ -19,20 +19,25 @@ namespace GetLatest
     {
         public static string GetLatestRelease(string url, string filename = "")
         {
-            string response = "FAILED TO FETCH";
+            string pResponse = "FAILED TO FETCH";
 
             try
             {
                 HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
+                request.Timeout = 5000;
                 request.Method = "GET";
                 request.AllowAutoRedirect = true;
                 request.ContentType = "application/x-www-form-urlencoded";
 
-                response = request.GetResponse().ResponseUri.ToString().Replace("tag", "download") + "/" + filename;
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+
+                pResponse = response.ResponseUri.ToString().Replace("tag", "download") + "/" + filename;
+
+                response.Close();
             }
             catch (Exception) { }
 
-            return response;
+            return pResponse;
         }
 
         public static string GetLatestVersion(string url)
@@ -56,8 +61,22 @@ namespace GetLatest
 
         static void Main(string[] args)
         {
-            Console.WriteLine(GetLatestVersion("https://github.com/derrod/legendary/releases/latest/")); // As of 06/11/2022 this becomes "0.20.26"
-            Console.WriteLine(GetLatestRelease("https://github.com/derrod/legendary/releases/latest/", "legendary.exe")); // As of 06/11/2022 this becomes "https://github.com/derrod/legendary/releases/download/0.20.26/legendary.exe
+            string legendaryURL = "https://github.com/derrod/legendary/releases/latest/";
+            string obsURL = "https://github.com/obsproject/obs-studio/releases/latest/";
+            
+            Console.WriteLine("Legendary:");
+            
+            Console.WriteLine(GetLatestVersion(legendaryURL)); // As of 06/11/2022 this becomes "0.20.26"
+            Console.WriteLine(GetLatestRelease(legendaryURL, "legendary.exe")); // As of 06/11/2022 this becomes "https://github.com/derrod/legendary/releases/download/0.20.26/legendary.exe
+
+            Console.WriteLine(Environment.NewLine + "OBS-Studio:");
+            
+            string latest = GetLatestRelease(obsURL);
+            string latestVersion = GetLatestVersion(obsURL);
+            
+            Console.WriteLine(latestVersion);
+            Console.WriteLine(latest + "OBS-Studio-" + latestVersion + "-Full-Installer-x64.exe");
+
             Console.ReadLine();
         }
     }

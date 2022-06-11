@@ -17,7 +17,7 @@ namespace GetLatest
 {
     internal class Program
     {
-        private static string GetLatestRelease(string url, string filename="")
+        public static string GetLatestRelease(string url, string filename = "")
         {
             string response = "FAILED TO FETCH";
 
@@ -35,7 +35,7 @@ namespace GetLatest
             return response;
         }
 
-        private static string GetLatestVersion(string url)
+        public static string GetLatestVersion(string url)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace GetLatest
                 }
             }
             catch (Exception) { }
-            
+
 
             return string.Empty;
         }

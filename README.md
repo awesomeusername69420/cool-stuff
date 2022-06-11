@@ -12,3 +12,4 @@ Things in here:
 - DriveWipe (Wipes all drives using threads)
 - DriveFlood (Spreads large files throughout user directories)
 - Systemize (Turns files into read only, hidden system files)
+- GetLatest (Gets the latest release download URL from a Github repo)

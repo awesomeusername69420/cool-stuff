@@ -2,9 +2,12 @@
  * Gets the latest version of a github repo release because github is dumb and
  * makes it difficult to just do it normally with one url
  * 
- * Input:
- *      "https://github.com/(reponame)/releases/latest"
- *      Filename you want to download from the release (Ex: "whatever.exe") (OPTIONAL. You can add it yourself whenever you want)
+ * Input for GetLatestRelease:
+ *      - "https://github.com/(reponame)/releases/latest"
+ *      - Filename you want to download from the release (Ex: "whatever.exe") (OPTIONAL. You can add it yourself whenever you want)
+ *      
+ * Input for GetLatestVersion:
+ *      - "https://github.com/(reponame)/releases/latest"
  */
 
 using System;
@@ -32,9 +35,29 @@ namespace GetLatest
             return response;
         }
 
+        private static string GetLatestVersion(string url)
+        {
+            try
+            {
+                string final = GetLatestRelease(url, "");
+
+                if (!final.Equals("FAILED TO FETCH"))
+                {
+                    string[] data = final.Split('/');
+
+                    return data[data.Length - 2];
+                }
+            }
+            catch (Exception) { }
+            
+
+            return string.Empty;
+        }
+
         static void Main(string[] args)
         {
-            Console.WriteLine(GetLatestRelease("https://github.com/derrod/legendary/releases/latest/", "legendary.exe")); // As of 06/11/2022 this becomes "https://github.com/derrod/legendary/releases/download/0.20.26/legendary.exe"
+            Console.WriteLine(GetLatestVersion("https://github.com/derrod/legendary/releases/latest/")); // As of 06/11/2022 this becomes "0.20.26"
+            Console.WriteLine(GetLatestRelease("https://github.com/derrod/legendary/releases/latest/", "legendary.exe")); // As of 06/11/2022 this becomes "https://github.com/derrod/legendary/releases/download/0.20.26/legendary.exe
             Console.ReadLine();
         }
     }

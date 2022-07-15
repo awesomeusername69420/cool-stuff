@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			body {
+				background-color: rgb(30, 30, 30);
+			}
+
+			label {
+				color: white;
+				font-family: sans-serif;
+				text-align: right;
+
+				width: 65px;
+
+				display: inline-block;
+			}
+
+			h1 {
+				color: white;
+				font-family: sans-serif;
+			}
+
+			button {
+				font-family: sans-serif;
+			}
+
+			.thBorder {
+				color: white;
+				font-family: sans-serif;
+
+				border: 1px solid;
+				border-style: none none solid none;
+			}
+
+			.section {
+				color: white;
+				font-family: sans-serif;
+
+				border: 5px dotted green;
+
+				padding: 10px;
+			}
+
+		</style>
+
+		<script type="text/javascript">
+			function outputURL(url) {
+				document.getElementById("search_output").innerHTML = "<a href=\"" + url + "\" target=\"_blank\">" + url + "</a>"
+			}
+
+			function stringIsEmpty(str) {
+				return str === ""
+			}
+
+			function pAssert(condition, message) {
+				if (!condition)
+					throw new Error(message || "Assert failed.")
+			}
+
+			function clearSearch() {
+				document.getElementById("search_output").innerHTML = ""
+
+				document.getElementById("imdb_url").value =""
+				document.getElementById("imdb_id").value =""
+				document.getElementById("imdb_s").value =""
+				document.getElementById("imdb_e").value =""
+
+				document.getElementById("tmdb_url").value =""
+				document.getElementById("tmdb_id").value =""
+				document.getElementById("tmdb_s").value =""
+				document.getElementById("tmdb_e").value =""
+			}
+
+			function runSearch() {
+				let output = document.getElementById("search_output")
+
+				let imdb_url = document.getElementById("imdb_url")
+				let imdb_id = document.getElementById("imdb_id")
+				let imdb_s = document.getElementById("imdb_s")
+				let imdb_e = document.getElementById("imdb_e")
+
+				try {
+					if (!stringIsEmpty(imdb_url.value)) {
+						var url
+
+						try {
+							url = new URL(imdb_url.value)
+						} catch (err) {
+							alert("Invalid URL")
+							return
+						}
+
+						var path = url.pathname
+						var id = path.split("/")[2]
+
+						pAssert(id, "ID not found")
+
+						outputURL("https://vidsrc.me/embed/" + id)
+						return
+					} else if (!stringIsEmpty(imdb_id.value)) {
+						if (stringIsEmpty(imdb_s.value) && stringIsEmpty(imdb_e.value)) {
+							outputURL("https://vidsrc.me/embed/" + imdb_id.value)
+							return
+						} else {
+							if (stringIsEmpty(imdb_s.value)) {
+								alert("Invalid season")
+								return
+							}
+
+							if (stringIsEmpty(imdb_e.value)) {
+								alert("Invalid episode")
+								return
+							}
+
+							outputURL("https://vidsrc.me/embed/" + imdb_id.value + "/" + imdb_s.value + "-" + imdb_e.value)
+							return
+						}
+					} else if (!stringIsEmpty(imdb_s.value) || !stringIsEmpty(imdb_e.value)) {
+						alert("Invalid ID")
+						return
+					}
+				} catch (err) {
+					alert("Failed to handle IMDb data")
+					return
+				}
+
+				let tmdb_url = document.getElementById("tmdb_url")
+				let tmdb_id = document.getElementById("tmdb_id")
+				let tmdb_s = document.getElementById("tmdb_s")
+				let tmdb_e = document.getElementById("tmdb_e")
+
+				try {
+					if (!stringIsEmpty(tmdb_url.value)) {
+						var url
+
+						try {
+							url = new URL(tmdb_url.value)
+						} catch (err) {
+							alert("Invalid URL")
+							return
+						}
+
+						var path = url.pathname
+						var id = path.split("/")[2]
+						
+						pAssert(id, "ID not found")
+
+						var id_s = id.split("-")[0]
+
+						pAssert(id_s, "ID not found")
+
+						outputURL("https://vidsrc.me/embed/" + id_s)
+						return
+					} else if (!stringIsEmpty(tmdb_id.value)) {
+						if (stringIsEmpty(tmdb_s.value) && stringIsEmpty(tmdb_e.value)) {
+							outputURL("https://vidsrc.me/embed/" + imdb_id.value)
+							return
+						} else {
+							if (stringIsEmpty(tmdb_s.value)) {
+								alert("Invalid season")
+								return
+							}
+
+							if (stringIsEmpty(tmdb_e.value)) {
+								alert("Invalid episode")
+								return
+							}
+
+							outputURL("https://vidsrc.me/embed/" + tmdb_id.value + "/" + tmdb_s.value + "-" + tmdb_e.value)
+							return
+						}
+					} else if (!stringIsEmpty(tmdb_s.value) || !stringIsEmpty(tmdb_e.value)) {
+						alert("Invalid ID")
+						return
+					}
+				} catch (err) {
+					alert("Failed to handle TheMoveDB data")
+					return
+				}
+			}
+		</script>
+
+		<title>lemesrc - vidsrc.me thing</title>
+	</head>
+
+	<body>
+		<center>
+			<div class="section" style="border-color: red; display: inline-block;">
+				<h1>Search</h1>
+
+				<table>
+					<tr>
+						<th class="thBorder">IMDb</th>
+						<th>&nbsp;</th>
+						<th class="thBorder">TheMovieDB</th>
+					</tr>
+
+					<tr>
+						<td>
+							<label for="imdb_url">URL</label>
+							<input type="text" id="imdb_url">
+							<br />
+							<br />
+							<label for="imdb_id">ID</label>
+							<input type="text" id="imdb_id">
+							<br />
+							<label for="imdb_s">Season</label>
+							<input type="text" id="imdb_s">
+							<br />
+							<label for="imdb_e">Episode</label>
+							<input type="text" id="imdb_e">
+						</td>
+
+						<td></td>
+
+						<td>
+							<label for="tmdb_url">URL</label>
+							<input type="text" id="tmdb_url">
+							<br />
+							<br />
+							<label for="tmdb_id">ID</label>
+							<input type="text" id="tmdb_id">
+							<br />
+							<label for="tmdb_s">Season</label>
+							<input type="text" id="tmdb_s">
+							<br />
+							<label for="tmdb_e">Episode</label>
+							<input type="text" id="tmdb_e">
+						</td>
+					</tr>
+				</table>
+
+				<br />
+
+				<button onclick="runSearch();">Submit</button>
+				<button onclick="clearSearch();">Clear</button>
+
+				<br /><br />
+
+				<div id="search_output"></div>
+			</div>
+			<!--
+				This can't be done right now because the API has a few quirks
+				that make it too janky to work with
+			<br /><br />
+
+			<div class="section">
+				<h1>Entire Index</h1>
+			</div>
+			-->
+		</center>
+	</body>
+</html>

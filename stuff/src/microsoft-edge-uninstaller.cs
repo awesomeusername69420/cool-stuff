@@ -11,7 +11,7 @@ namespace EdgeSucks
 {
     class Program
     {
-        static void Explode(string reason, int code=-1)
+        static void Explode(string reason, int code = -1)
         {
             Console.WriteLine(reason);
             Console.ReadKey();
@@ -33,9 +33,7 @@ namespace EdgeSucks
             catch (Exception) { }
 
             if (key == null) // This shouldn't happen but just in case
-            {
                 Explode("Failed to open registry key.");
-            }
 
             try
             {
@@ -47,37 +45,33 @@ namespace EdgeSucks
                         {
                             string sname = (string)subkey.GetValue("DisplayName");
 
-                            if (!string.IsNullOrEmpty(sname))
+                            if (string.IsNullOrEmpty(sname)) continue;
+
+                            sname = sname.ToLower();
+
+                            if (!sname.Equals("microsoft edege")) continue;
+
+                            string sver = (string)subkey.GetValue("DisplayVersion");
+                            string spath = (string)subkey.GetValue("InstallLocation"); // Attempt to get the information of Edge through the registry
+
+                            int found = 0;
+
+                            if (!string.IsNullOrEmpty(sver))
                             {
-                                sname = sname.ToLower();
+                                edge_version = sver;
 
-                                if (sname == "microsoft edge")
-                                {
-                                    string sver = (string)subkey.GetValue("DisplayVersion");
-                                    string spath = (string)subkey.GetValue("InstallLocation"); // Attempt to get the information of Edge through the registry
-
-                                    int found = 0;
-
-                                    if (!string.IsNullOrEmpty(sver))
-                                    {
-                                        edge_version = sver;
-
-                                        found = found + 1;
-                                    }
-
-                                    if (!string.IsNullOrEmpty(spath))
-                                    {
-                                        edge_location = spath;
-
-                                        found = found + 1;
-                                    }
-
-                                    if (found == 2)
-                                    {
-                                        break; // If a version and location were found there's no need to go over the rest of the programs when we already found what we need
-                                    }
-                                }
+                                found = found + 1;
                             }
+
+                            if (!string.IsNullOrEmpty(spath))
+                            {
+                                edge_location = spath;
+
+                                found = found + 1;
+                            }
+
+                            if (found == 2)
+                                break; // If a version and location were found there's no need to go over the rest of the programs when we already found what we need
                         }
                     }
                     catch (Exception ex)
@@ -92,14 +86,10 @@ namespace EdgeSucks
             }
 
             if (string.IsNullOrEmpty(edge_version)) // :(
-            {
                 Explode("Failed to find Edge version.", -3);
-            }
 
             if (string.IsNullOrEmpty(edge_location)) // :(
-            {
                 Explode("Failed to find Edge location.", -4);
-            }
 
             string fullpath = edge_location + "\\" + edge_version + "\\Installer\\setup.exe";
 

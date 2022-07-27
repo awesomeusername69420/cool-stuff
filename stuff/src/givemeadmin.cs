@@ -16,9 +16,7 @@ namespace givemeadmin
             try
             {
                 using (WindowsIdentity user = WindowsIdentity.GetCurrent())
-                {
                     return new WindowsPrincipal(user).IsInRole(WindowsBuiltInRole.Administrator);
-                }
             }
             catch (Exception) { }
 

@@ -14,3 +14,4 @@ Things in here:
 - Systemize (Turns files into read only, hidden system files)
 - GetLatest (Gets the latest release download URL from a Github repo)
 - lemesrc (vidsrc API)
+- DownAll (Mass image downscaler)

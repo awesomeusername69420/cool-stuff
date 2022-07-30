@@ -137,7 +137,7 @@ namespace DownAll
 			{
 				string FileName = Path.GetFileName(FilePath);
 
-				int NewWidth = Clamp(StartWidth - (SubWidth * Index)), 1;
+				int NewWidth = Clamp(StartWidth - (SubWidth * Index), 1);
 				int NewHeight = Clamp(StartHeight - (SubHeight * Index), 1);
 
 				Bitmap SourceImg = new Bitmap(FilePath);

@@ -145,6 +145,9 @@ namespace DownAll
 
 				OutputImg.Save(OutputDir + "\\" + FileName);
 
+				SourceImg.Dispose();
+				OutputImg.Dispose();
+
 				Index = Index + 1;
 			}
 

@@ -20,6 +20,11 @@ namespace DownAll
 			InitializeComponent();
 		}
 
+		private int Round(double x) // CS0121
+		{
+			return (int)Math.Round(x);
+		}
+
 		private int Clamp(int x, int min = 0, int max = 2147483647)
 		{
 			if (x < min) return min;
@@ -117,12 +122,12 @@ namespace DownAll
 			int SubHeight = 0;
 
 			if (DecreaseWidthAuto.Checked)
-				SubWidth = StartWidth / SourceFiles.Length;
+				SubWidth = Round(StartWidth / SourceFiles.Length);
 			else
 				SubWidth = (Int32)DecreaseWidth.Value;
 
 			if (DecreaseHeightAuto.Checked)
-				SubHeight = StartHeight / SourceFiles.Length;
+				SubHeight = Round(StartHeight / SourceFiles.Length);
 			else
 				SubHeight = (Int32)DecreaseWidth.Value;
 

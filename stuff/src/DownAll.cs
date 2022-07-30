@@ -122,12 +122,12 @@ namespace DownAll
 			int SubHeight = 0;
 
 			if (DecreaseWidthAuto.Checked)
-				SubWidth = Round(StartWidth / SourceFiles.Length);
+				SubWidth = Round((double)StartWidth / SourceFiles.Length);
 			else
 				SubWidth = (Int32)DecreaseWidth.Value;
 
 			if (DecreaseHeightAuto.Checked)
-				SubHeight = Round(StartHeight / SourceFiles.Length);
+				SubHeight = Round((double)StartHeight / SourceFiles.Length);
 			else
 				SubHeight = (Int32)DecreaseWidth.Value;
 
